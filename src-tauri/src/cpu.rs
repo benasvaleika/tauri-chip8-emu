@@ -36,6 +36,8 @@ impl CPU {
         self.pc += 2;
 
         println!("{:0x?}", &opcode);
+
+        self.execute_opcode(opcode);
     }
 
     fn read_opcode(&self) -> u16 {
@@ -54,6 +56,21 @@ impl CPU {
             } else {
                 break;
             }
+        }
+    }
+
+    fn execute_opcode(&self, opcode: u16) {
+        let inst = ((opcode & 0xF000) >> 12) as u8;
+        let x = ((opcode & 0x0F00) >> 8) as u8;
+        let y = ((opcode & 0x00F0) >> 4) as u8;
+        let var = (opcode & 0x000F) as u8;
+
+        let nnn = (opcode & 0x0FFF) as usize;
+        let nn = (opcode & 0x00FF) as u8;
+        let n = (opcode & 0x000F) as usize;
+
+        match (inst, x, y, var) {
+            _ => println!("opcode {:04x} not implemented", opcode),
         }
     }
 }
