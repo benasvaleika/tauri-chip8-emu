@@ -6,15 +6,15 @@ function App() {
   const testHandler = async () => {
     const file_path = await open();
     console.log(file_path);
-    invoke("test_cpu", { romPath: file_path });
+    invoke("start_cpu", { romPath: file_path });
   };
 
   return (
     <div className="text-center">
-      <h1 className="mt-10 text-4xl text-white font-extrabold">
+      <h1 className="mt-10 text-5xl text-white font-extrabold">
         CHIP-8 EMULATOR
       </h1>
-      <Button text="Test" onClick={testHandler} className="mt-10 mr-4" />
+      <Button text="Load Rom" onClick={testHandler} className="mt-20 mr-4" />
     </div>
   );
 }

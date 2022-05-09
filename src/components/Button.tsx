@@ -11,7 +11,7 @@ export const Button: React.FC<ButtonProps> = ({ text, onClick, className }) => {
     <button
       onClick={onClick}
       className={
-        "text-white font-extrabold border-4 py-1 px-3 text-lg " + className
+        "text-white font-extrabold border-4 py-2 px-3 text-xl " + className
       }
     >
       {text}
