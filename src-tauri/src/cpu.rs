@@ -9,7 +9,7 @@ pub struct CPU {
     pc: usize,
     i: usize,
     sp: usize,
-    display: [[u8; 64]; 32],
+    pub display: [u8; 2048],
     display_changed: bool,
 }
 
@@ -29,7 +29,7 @@ impl CPU {
             pc: 0x200,
             i: 0,
             sp: 0,
-            display: [[0; 64]; 32],
+            display: [0; 2048],
             display_changed: false,
         }
     }
@@ -88,13 +88,13 @@ impl CPU {
 
     // for debugging
     pub fn print_display(&self) {
-        for row in self.display {
-            print!("\n");
-            for col in row {
-                if col == 1 {
-                    print!("#")
-                } else {
-                    print!(" ")
+        for y in 0..32 {
+            println!("");
+            for x in 0..64 {
+                match self.display[y * 64 + x] {
+                    0 => print!(" "),
+                    1 => print!("#"),
+                    _ => println!("Unexpected value in display"),
                 }
             }
         }
@@ -108,7 +108,7 @@ impl CPU {
 
         for i in 0..32 {
             for j in 0..64 {
-                self.display[i][j] = 0;
+                self.display[i * 64 + j] = 0;
             }
         }
 
@@ -192,8 +192,8 @@ impl CPU {
                 let mut x = (self.vx[x as usize] as usize + bit) as usize % 64;
                 let mut y = (self.vx[y as usize] as usize + byte) as usize % 32;
                 let bit_active = (sprite_byte >> (7 - bit)) & 1;
-                self.vx[0xF] |= bit_active & self.display[y][x];
-                self.display[y][x] ^= bit_active;
+                self.vx[0xF] |= bit_active & self.display[y * 64 + x];
+                self.display[y * 64 + x] ^= bit_active;
             }
         }
 
