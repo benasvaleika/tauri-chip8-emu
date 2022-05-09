@@ -5,10 +5,12 @@ pub struct CPU {
     pub ram: [u8; 4096],
     // pub for debuging
     pub vx: [u8; 16],
-    stack: [u16; 16],
+    stack: [usize; 16],
     pc: usize,
-    i: u16,
-    sp: u8,
+    i: usize,
+    sp: usize,
+    display: [[u8; 64]; 32],
+    display_changed: bool,
 }
 
 impl CPU {
@@ -27,15 +29,16 @@ impl CPU {
             pc: 0x200,
             i: 0,
             sp: 0,
+            display: [[0; 64]; 32],
+            display_changed: false,
         }
     }
 
     pub fn emulate_cycle(&mut self) {
         let opcode = self.read_opcode();
 
-        self.pc += 2;
-
         println!("{:0x?}", &opcode);
+        println!("{:0x?}", self.pc);
 
         self.execute_opcode(opcode);
     }
@@ -59,7 +62,7 @@ impl CPU {
         }
     }
 
-    fn execute_opcode(&self, opcode: u16) {
+    fn execute_opcode(&mut self, opcode: u16) {
         let inst = ((opcode & 0xF000) >> 12) as u8;
         let x = ((opcode & 0x0F00) >> 8) as u8;
         let y = ((opcode & 0x00F0) >> 4) as u8;
@@ -70,7 +73,130 @@ impl CPU {
         let n = (opcode & 0x000F) as usize;
 
         match (inst, x, y, var) {
+            (0x0, 0x0, 0xE, 0x0) => self.op_00E0(),
+            (0x0, 0x0, 0xE, 0xE) => self.op_00EE(),
+            (0x1, _, _, _) => self.op_1NNN(nnn),
+            (0x2, _, _, _) => self.op_2NNN(nnn),
+            (0x3, _, _, _) => self.op_3XNN(x, nn),
+            (0x6, _, _, _) => self.op_6XNN(x, nn),
+            (0x7, _, _, _) => self.op_7XNN(x, nn),
+            (0xA, _, _, _) => self.op_ANNN(nnn),
+            (0xD, _, _, _) => self.op_DXYN(x, y, n),
             _ => println!("opcode {:04x} not implemented", opcode),
         }
+    }
+
+    // for debugging
+    pub fn print_display(&self) {
+        for row in self.display {
+            print!("\n");
+            for col in row {
+                if col == 1 {
+                    print!("#")
+                } else {
+                    print!(" ")
+                }
+            }
+        }
+    }
+
+    // OPCODES
+
+    // Clear the screen
+    fn op_00E0(&mut self) {
+        println!("00E0 Called");
+
+        for i in 0..32 {
+            for j in 0..64 {
+                self.display[i][j] = 0;
+            }
+        }
+
+        self.pc += 2;
+    }
+
+    // Return from subroutine
+    fn op_00EE(&mut self) {
+        println!("00EE Called");
+
+        self.sp -= 1;
+        self.pc = self.stack[self.sp];
+    }
+
+    // Jump to address NNN
+    fn op_1NNN(&mut self, nnn: usize) {
+        println!("1NNN Called");
+
+        self.pc = nnn;
+    }
+
+    // Execute subroutine starting at address NNN
+    fn op_2NNN(&mut self, nnn: usize) {
+        println!("2NNN Called");
+
+        if self.sp > self.stack.len() {
+            panic!("Stack Overflow");
+        } else {
+            self.stack[self.sp] = self.pc;
+            self.sp += 1;
+            self.pc = nnn;
+        }
+    }
+
+    // Skip the following instruction if the value of VX equals NN
+    fn op_3XNN(&mut self, x: u8, nn: u8) {
+        println!("3XNN Called");
+
+        if self.vx[x as usize] != nn {
+            self.pc += 2;
+        }
+    }
+
+    // Store number NN in VX
+    fn op_6XNN(&mut self, x: u8, nn: u8) {
+        println!("6XNN Called");
+
+        self.vx[x as usize] = nn;
+        self.pc += 2;
+    }
+
+    // Add the value NN to VX
+    // Does not affect VF
+    fn op_7XNN(&mut self, x: u8, nn: u8) {
+        println!("6XNN Called");
+
+        self.vx[x as usize] += nn;
+        self.pc += 2;
+    }
+
+    // Store memory address NNN in register I
+    fn op_ANNN(&mut self, nnn: usize) {
+        println!("ANNN Called");
+
+        self.i = nnn;
+        self.pc += 2;
+    }
+
+    // Draw a sprite at positions VX, VY with N bytes of sprite data starting
+    // at the address stored in I. Set VF to 01 if any set pixels are changed
+    // to unset, and 00 otherwise.
+    fn op_DXYN(&mut self, x: u8, y: u8, n: usize) {
+        println!("DXYN Called");
+
+        self.vx[0xF] = 0;
+        self.display_changed = true;
+
+        for byte in 0..n {
+            let sprite_byte = self.ram[self.i + byte] as u8;
+            for bit in 0..8 {
+                let mut x = (self.vx[x as usize] as usize + bit) as usize % 64;
+                let mut y = (self.vx[y as usize] as usize + byte) as usize % 32;
+                let bit_active = (sprite_byte >> (7 - bit)) & 1;
+                self.vx[0xF] |= bit_active & self.display[y][x];
+                self.display[y][x] ^= bit_active;
+            }
+        }
+
+        self.pc += 2;
     }
 }
