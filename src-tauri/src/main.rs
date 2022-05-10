@@ -12,6 +12,12 @@ use std::fs;
 use cpu::CPU;
 use tauri::Window;
 
+#[derive(Clone, serde::Serialize)]
+struct Payload {
+    #[serde(serialize_with = "<[_]>::serialize")]
+    display: [u8; 2048],
+}
+
 #[tauri::command]
 fn start_cpu(window: Window, rom_path: String) {
     let rom_contents = fs::read(rom_path).expect("Error occured while reading the file");
@@ -20,49 +26,20 @@ fn start_cpu(window: Window, rom_path: String) {
 
     cpu.load_rom(&rom_contents);
 
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
-    cpu.emulate_cycle();
+    let test_arr = [0; 2048];
+
+    for i in 0..30 {
+        cpu.emulate_cycle();
+    }
+
+    window
+        .emit(
+            "display-update",
+            Payload {
+                display: cpu.display,
+            },
+        )
+        .unwrap();
 
     cpu.print_display()
 }
