@@ -1,21 +1,49 @@
 import { invoke } from "@tauri-apps/api";
 import { open } from "@tauri-apps/api/dialog";
-import { Button } from "./components/Button";
+import { listen } from "@tauri-apps/api/event";
+import { useEffect, useState } from "react";
+import { MainScr } from "./screens/MainScr";
+import { EmulationScr } from "./screens/EmulationScr";
+import { Payload } from "./interfaces";
 
 function App() {
-  const testHandler = async () => {
+  const [emulationOngoing, setEmulationOngoing] = useState(false);
+  const [display, setDisplay] = useState<number[]>(Array(2048).fill(0));
+
+  const start_emu = async () => {
     const file_path = await open();
     console.log(file_path);
+    if (file_path === null) {
+      return;
+    }
     invoke("start_cpu", { romPath: file_path });
+    setEmulationOngoing(true);
   };
 
+  useEffect(() => {
+    const unlistenDisplayUpdate = listen("display-update", (event) => {
+      console.log("display update received");
+      const data = event.payload as Payload;
+      setDisplay(data.display);
+
+      return () => {
+        unlistenDisplayUpdate.then((f) => f());
+      };
+    });
+
+    return () => {
+      unlistenDisplayUpdate.then((f) => f());
+    };
+  }, []);
+
   return (
-    <div className="text-center">
-      <h1 className="mt-10 text-5xl text-white font-extrabold">
-        CHIP-8 EMULATOR
-      </h1>
-      <Button text="Load Rom" onClick={testHandler} className="mt-20 mr-4" />
-    </div>
+    <>
+      {!emulationOngoing ? (
+        <MainScr testHandler={start_emu} />
+      ) : (
+        <EmulationScr display={display} />
+      )}
+    </>
   );
 }
 
