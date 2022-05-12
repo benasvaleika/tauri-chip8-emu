@@ -78,8 +78,11 @@ impl CPU {
             (0x1, _, _, _) => self.op_1NNN(nnn),
             (0x2, _, _, _) => self.op_2NNN(nnn),
             (0x3, _, _, _) => self.op_3XNN(x, nn),
+            (0x4, _, _, _) => self.op_4XNN(x, nn),
+            (0x5, _, _, 0x0) => self.op_5XY0(x, y),
             (0x6, _, _, _) => self.op_6XNN(x, nn),
             (0x7, _, _, _) => self.op_7XNN(x, nn),
+            (0x9, _, _, 0x0) => self.op_9XY0(x, y),
             (0xA, _, _, _) => self.op_ANNN(nnn),
             (0xD, _, _, _) => self.op_DXYN(x, y, n),
             _ => println!("opcode {:04x} not implemented", opcode),
@@ -147,8 +150,26 @@ impl CPU {
     fn op_3XNN(&mut self, x: u8, nn: u8) {
         println!("3XNN Called");
 
+        if self.vx[x as usize] == nn {
+            self.pc += 4;
+        }
+    }
+
+    // Skip the following instruction if the value of VX is not equal to NN
+    fn op_4XNN(&mut self, x: u8, nn: u8) {
+        println!("4XNN Called");
+
         if self.vx[x as usize] != nn {
-            self.pc += 2;
+            self.pc += 4;
+        }
+    }
+
+    // Skip the following instruction if the value of VX is equal to the value of VY
+    fn op_5XY0(&mut self, x: u8, y: u8) {
+        println!("5XY0 Called");
+
+        if self.vx[x as usize] == self.vx[y as usize] {
+            self.pc += 4;
         }
     }
 
@@ -163,10 +184,20 @@ impl CPU {
     // Add the value NN to VX
     // Does not affect VF
     fn op_7XNN(&mut self, x: u8, nn: u8) {
-        println!("6XNN Called");
+        println!("7XNN Called");
 
         self.vx[x as usize] += nn;
         self.pc += 2;
+    }
+
+    // Skip the following instruction if the value of register VX
+    // is not equal to the value of register VY.
+    fn op_9XY0(&mut self, x: u8, y: u8) {
+        println!("9XY0 Called");
+
+        if self.vx[x as usize] != self.vx[y as usize] {
+            self.pc += 4;
+        }
     }
 
     // Store memory address NNN in register I
