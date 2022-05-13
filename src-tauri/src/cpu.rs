@@ -82,6 +82,12 @@ impl CPU {
             (0x5, _, _, 0x0) => self.op_5XY0(x, y),
             (0x6, _, _, _) => self.op_6XNN(x, nn),
             (0x7, _, _, _) => self.op_7XNN(x, nn),
+            (0x8, _, _, 0x0) => self.op_8XY0(x, y),
+            (0x8, _, _, 0x1) => self.op_8XY1(x, y),
+            (0x8, _, _, 0x2) => self.op_8XY2(x, y),
+            (0x8, _, _, 0x3) => self.op_8XY3(x, y),
+            (0x8, _, _, 0x4) => self.op_8XY4(x, y),
+            (0x8, _, _, 0x5) => self.op_8XY5(x, y),
             (0x9, _, _, 0x0) => self.op_9XY0(x, y),
             (0xA, _, _, _) => self.op_ANNN(nnn),
             (0xD, _, _, _) => self.op_DXYN(x, y, n),
@@ -188,6 +194,70 @@ impl CPU {
 
         self.vx[x as usize] += nn;
         self.pc += 2;
+    }
+
+    // Store the value of VY in VX
+    fn op_8XY0(&mut self, x: u8, y: u8) {
+        println!("8XY0 Called");
+
+        self.vx[x as usize] = self.vx[y as usize];
+        self.pc += 2;
+    }
+
+    // Set VX to VX OR VY
+    fn op_8XY1(&mut self, x: u8, y: u8) {
+        println!("8XY1 Called");
+
+        self.vx[x as usize] |= self.vx[y as usize];
+        self.pc += 2;
+    }
+
+    // Set VX to VX AND VY
+    fn op_8XY2(&mut self, x: u8, y: u8) {
+        println!("8XY2 Called");
+
+        self.vx[x as usize] &= self.vx[y as usize];
+        self.pc += 2;
+    }
+
+    // Set VX to VX XOR VY
+    fn op_8XY3(&mut self, x: u8, y: u8) {
+        println!("8XY3 Called");
+
+        self.vx[x as usize] ^= self.vx[y as usize];
+        self.pc += 2;
+    }
+
+    // Add the value of VY to VX, sets VF to 1 if a carry occurs,
+    // sets VF to 00 if a carry does not occur
+    fn op_8XY4(&mut self, x: u8, y: u8) {
+        println!("8XY4 Called");
+
+        let (val, overflow) = self.vx[x as usize].overflowing_add(self.vx[y as usize]);
+
+        self.vx[x as usize] = val;
+
+        if overflow {
+            self.vx[0xF] = 1;
+        } else {
+            self.vx[0xF] = 0;
+        }
+    }
+
+    // Substract the value of VY from VX, set VF to 0 if borrow occurs
+    // set VF to 1 if the borrow doesn't occur
+    fn op_8XY5(&mut self, x: u8, y: u8) {
+        println!("8XY5 Called");
+
+        let (val, borrow) = self.vx[x as usize].overflowing_sub(self.vx[y as usize]);
+
+        self.vx[x as usize] = val;
+
+        if borrow {
+            self.vx[0xF] = 0;
+        } else {
+            self.vx[0xF] = 1;
+        }
     }
 
     // Skip the following instruction if the value of register VX
