@@ -88,6 +88,9 @@ impl CPU {
             (0x8, _, _, 0x3) => self.op_8XY3(x, y),
             (0x8, _, _, 0x4) => self.op_8XY4(x, y),
             (0x8, _, _, 0x5) => self.op_8XY5(x, y),
+            (0x8, _, _, 0x6) => self.op_8XY6(x),
+            // (0x8, _, _, 0x7) => self.op_8XY7(x, y),
+            // (0x8, _, _, 0xE) => self.op_8XYE(x, y),
             (0x9, _, _, 0x0) => self.op_9XY0(x, y),
             (0xA, _, _, _) => self.op_ANNN(nnn),
             (0xD, _, _, _) => self.op_DXYN(x, y, n),
@@ -258,6 +261,16 @@ impl CPU {
         } else {
             self.vx[0xF] = 1;
         }
+    }
+
+    // 	Stores the least significant bit of VX in VF and then shifts VX to the right by 1
+    fn op_8XY6(&mut self, x: u8) {
+        println!("8XY6 Called");
+
+        self.vx[0xF] = self.vx[x as usize] & 1;
+        self.vx[x as usize] >>= 1;
+
+        self.pc += 2;
     }
 
     // Skip the following instruction if the value of register VX
