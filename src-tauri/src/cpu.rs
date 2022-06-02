@@ -95,6 +95,7 @@ impl CPU {
             (0x9, _, _, 0x0) => self.op_9XY0(x, y),
             (0xA, _, _, _) => self.op_ANNN(nnn),
             (0xB, _, _, _) => self.op_BNNN(nnn),
+            (0xC, _, _, _) => self.op_CXNN(x, nn),
             (0xD, _, _, _) => self.op_DXYN(x, y, n),
             _ => println!("opcode {:04x} not implemented", opcode),
         }
