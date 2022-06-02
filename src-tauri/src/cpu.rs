@@ -1,4 +1,5 @@
 use crate::chip8_font::CHIP8_FONT_SET;
+use rand::Rng;
 
 pub struct CPU {
     // pub for debuging
@@ -93,6 +94,7 @@ impl CPU {
             (0x8, _, _, 0xE) => self.op_8XYE(x, y),
             (0x9, _, _, 0x0) => self.op_9XY0(x, y),
             (0xA, _, _, _) => self.op_ANNN(nnn),
+            (0xB, _, _, _) => self.op_BNNN(nnn),
             (0xD, _, _, _) => self.op_DXYN(x, y, n),
             _ => println!("opcode {:04x} not implemented", opcode),
         }
@@ -318,6 +320,21 @@ impl CPU {
         println!("ANNN Called");
 
         self.i = nnn;
+        self.pc += 2;
+    }
+
+    // Jump to address NNN + V0
+    fn op_BNNN(&mut self, nnn: usize) {
+        println!("BNNN Called");
+        self.pc = nnn + self.vx[0x0] as usize;
+    }
+
+    // Set VX to a random number with mask of NN
+    fn op_CXNN(&mut self, x: u8, nn: u8) {
+        println!("CXNN Called");
+
+        let mut random: u8 = rand::thread_rng().gen();
+        self.vx[x as usize] = random & nn;
         self.pc += 2;
     }
 
