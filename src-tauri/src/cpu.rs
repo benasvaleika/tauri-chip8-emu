@@ -12,6 +12,7 @@ pub struct CPU {
     sp: usize,
     pub display: [u8; 2048],
     display_changed: bool,
+    pub keys: [bool; 16],
 }
 
 impl CPU {
@@ -32,6 +33,7 @@ impl CPU {
             sp: 0,
             display: [0; 2048],
             display_changed: false,
+            keys: [false; 16],
         }
     }
 
@@ -97,6 +99,8 @@ impl CPU {
             (0xB, _, _, _) => self.op_BNNN(nnn),
             (0xC, _, _, _) => self.op_CXNN(x, nn),
             (0xD, _, _, _) => self.op_DXYN(x, y, n),
+            (0xE, _, 0x9, 0xE) => self.op_EX9E(x),
+            (0xE, _, 0xA, 0x1) => self.op_EXA1(x),
             _ => println!("opcode {:04x} not implemented", opcode),
         }
     }
@@ -360,5 +364,29 @@ impl CPU {
         }
 
         self.pc += 2;
+    }
+
+    // Skip the following instruction if they key corresponding to the hex
+    // value is pressed
+    fn op_EX9E(&mut self, x: u8) {
+        println!("EX9E Called");
+
+        if self.keys[x as usize] {
+            self.pc += 4;
+        } else {
+            self.pc += 2;
+        }
+    }
+
+    // Skip the following instruction if they key corresponding to the hex
+    // value is not pressed
+    fn op_EXA1(&mut self, x: u8) {
+        println!("EXA1 Called");
+
+        if self.keys[x as usize] {
+            self.pc += 2;
+        } else {
+            self.pc += 4;
+        }
     }
 }
