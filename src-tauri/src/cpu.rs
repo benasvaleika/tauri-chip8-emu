@@ -13,6 +13,8 @@ pub struct CPU {
     pub display: [u8; 2048],
     display_changed: bool,
     pub keys: [bool; 16],
+    delayt: u8,
+    soundt: u8,
 }
 
 impl CPU {
@@ -34,6 +36,8 @@ impl CPU {
             display: [0; 2048],
             display_changed: false,
             keys: [false; 16],
+            delayt: 0,
+            soundt: 0,
         }
     }
 
@@ -101,6 +105,10 @@ impl CPU {
             (0xD, _, _, _) => self.op_DXYN(x, y, n),
             (0xE, _, 0x9, 0xE) => self.op_EX9E(x),
             (0xE, _, 0xA, 0x1) => self.op_EXA1(x),
+            (0xF, _, 0x0, 0x7) => self.op_FX07(x),
+            (0xF, _, 0x0, 0xA) => self.op_FX0A(x),
+            (0xF, _, 0x1, 0x5) => self.op_FX15(x),
+            (0xF, _, 0x1, 0x8) => self.op_FX18(x),
             _ => println!("opcode {:04x} not implemented", opcode),
         }
     }
@@ -388,5 +396,28 @@ impl CPU {
         } else {
             self.pc += 4;
         }
+    }
+
+    // Store current value of the delay timer in VX
+    fn op_FX07(&mut self, x: u8) {
+        println!("FX07 Called");
+
+        self.vx[x as usize] = self.delayt;
+        self.pc += 2;
+    }
+
+    // Set the delay timer to the current value of register VX
+    fn op_FX15(&mut self, x: u8) {
+        println!("FX15 Called");
+
+        self.delayt = self.vx[x as usize];
+        self.pc += 2;
+    }
+
+    fn op_FX18(&mut self, x: u8) {
+        println!("FX18 Called");
+
+        self.soundt = self.vx[x as usize];
+        self.pc += 2;
     }
 }
