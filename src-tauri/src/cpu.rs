@@ -406,6 +406,18 @@ impl CPU {
         self.pc += 2;
     }
 
+    // Wait for keypress and store the result in VX
+    pub fn op_FX0A(&mut self, x: u8) {
+        println!("FX0A Called");
+
+        for i in 0..self.keys.len() {
+            if self.keys[i] == true {
+                self.vx[x as usize] = i as u8;
+                self.pc += 2;
+            }
+        }
+    }
+
     // Set the delay timer to the current value of register VX
     fn op_FX15(&mut self, x: u8) {
         println!("FX15 Called");
