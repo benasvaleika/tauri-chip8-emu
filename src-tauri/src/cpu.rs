@@ -109,6 +109,7 @@ impl CPU {
             (0xF, _, 0x0, 0xA) => self.op_FX0A(x),
             (0xF, _, 0x1, 0x5) => self.op_FX15(x),
             (0xF, _, 0x1, 0x8) => self.op_FX18(x),
+            (0xF, _, 0x1, 0xE) => self.op_FX1E(x),
             _ => println!("opcode {:04x} not implemented", opcode),
         }
     }
@@ -426,10 +427,19 @@ impl CPU {
         self.pc += 2;
     }
 
+    // Set the sound timet to the current value of register VX
     fn op_FX18(&mut self, x: u8) {
         println!("FX18 Called");
 
         self.soundt = self.vx[x as usize];
+        self.pc += 2;
+    }
+
+    // Add the value stored in VX to I
+    fn op_FX1E(&mut self, x: u8) {
+        println!("FX1E Called");
+
+        self.i += self.vx[x as usize] as usize;
         self.pc += 2;
     }
 }
