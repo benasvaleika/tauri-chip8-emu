@@ -110,6 +110,7 @@ impl CPU {
             (0xF, _, 0x1, 0x5) => self.op_FX15(x),
             (0xF, _, 0x1, 0x8) => self.op_FX18(x),
             (0xF, _, 0x1, 0xE) => self.op_FX1E(x),
+            (0xF, _, 0x2, 0x9) => self.op_FX29(x),
             _ => println!("opcode {:04x} not implemented", opcode),
         }
     }
@@ -440,6 +441,15 @@ impl CPU {
         println!("FX1E Called");
 
         self.i += self.vx[x as usize] as usize;
+        self.pc += 2;
+    }
+
+    // Set I to the memory address of the sprite data corresponding
+    // to the hex digit stored in VX
+    fn op_FX29(&mut self, x: u8) {
+        println!("FX29 Called");
+
+        self.i = 0x50 + (x as usize * 5);
         self.pc += 2;
     }
 }
