@@ -111,6 +111,7 @@ impl CPU {
             (0xF, _, 0x1, 0x8) => self.op_FX18(x),
             (0xF, _, 0x1, 0xE) => self.op_FX1E(x),
             (0xF, _, 0x2, 0x9) => self.op_FX29(x),
+            (0xF, _, 0x3, 0x3) => self.op_FX33(x),
             _ => println!("opcode {:04x} not implemented", opcode),
         }
     }
@@ -451,5 +452,15 @@ impl CPU {
 
         self.i = 0x50 + (x as usize * 5);
         self.pc += 2;
+    }
+
+    // Store binary-coded decimal representation of the value stored in VX
+    // at memory addresses I, I+1, I+2
+    fn op_FX33(&mut self, x: u8) {
+        println!("FX33 Called");
+
+        self.ram[self.i] = self.vx[x as usize] / 100; // Hundreds
+        self.ram[self.i + 1] = (self.vx[x as usize] % 100) / 10; // Tens
+        self.ram[self.i + 2] = self.vx[x as usize] % 10; // Ones
     }
 }
