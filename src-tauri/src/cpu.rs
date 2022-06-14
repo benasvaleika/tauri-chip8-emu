@@ -152,7 +152,7 @@ impl CPU {
         println!("00EE Called");
 
         self.sp -= 1;
-        self.pc = self.stack[self.sp];
+        self.pc = self.stack[self.sp] + 2;
     }
 
     // Jump to address NNN
@@ -190,6 +190,8 @@ impl CPU {
 
         if self.vx[x as usize] != nn {
             self.pc += 4;
+        } else {
+            self.pc += 2
         }
     }
 
@@ -199,6 +201,8 @@ impl CPU {
 
         if self.vx[x as usize] == self.vx[y as usize] {
             self.pc += 4;
+        } else {
+            self.pc += 2;
         }
     }
 
@@ -215,7 +219,9 @@ impl CPU {
     fn op_7XNN(&mut self, x: u8, nn: u8) {
         println!("7XNN Called");
 
-        self.vx[x as usize] += nn;
+        let result = self.vx[x as usize] as u16 + nn as u16;
+
+        self.vx[x as usize] = result as u8;
         self.pc += 2;
     }
 
@@ -265,6 +271,8 @@ impl CPU {
         } else {
             self.vx[0xF] = 0;
         }
+
+        self.pc += 2;
     }
 
     // Substract the value of VY from VX, set VF to 0 if borrow occurs
@@ -330,6 +338,8 @@ impl CPU {
 
         if self.vx[x as usize] != self.vx[y as usize] {
             self.pc += 4;
+        } else {
+            self.pc += 2;
         }
     }
 
