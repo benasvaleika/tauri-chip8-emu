@@ -113,6 +113,7 @@ impl CPU {
             (0xF, _, 0x2, 0x9) => self.op_FX29(x),
             (0xF, _, 0x3, 0x3) => self.op_FX33(x),
             (0xF, _, 0x5, 0x5) => self.op_FX55(x),
+            // (0xF, _, 0x6, 0x5) => self.op_FX65(x),
             _ => println!("opcode {:04x} not implemented", opcode),
         }
     }
@@ -411,7 +412,7 @@ impl CPU {
     }
 
     // Wait for keypress and store the result in VX
-    pub fn op_FX0A(&mut self, x: u8) {
+    fn op_FX0A(&mut self, x: u8) {
         println!("FX0A Called");
 
         for i in 0..self.keys.len() {
@@ -467,12 +468,17 @@ impl CPU {
         self.pc += 2;
     }
 
+    // Store the values of V0 to VX inclusive in memory starting at address I.
+    // I is set to I+x+1 after operation
     fn op_FX55(&mut self, x: u8) {
         println!("FX55 Called");
 
-        for i in 0..x {
+        for i in 0..=x {
+            println!("{:?}", i);
             self.ram[self.i + i as usize] = self.vx[i as usize];
         }
+
+        self.i = self.i + x as usize + 1;
 
         self.pc += 2;
     }
