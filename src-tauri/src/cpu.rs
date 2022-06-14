@@ -112,6 +112,7 @@ impl CPU {
             (0xF, _, 0x1, 0xE) => self.op_FX1E(x),
             (0xF, _, 0x2, 0x9) => self.op_FX29(x),
             (0xF, _, 0x3, 0x3) => self.op_FX33(x),
+            (0xF, _, 0x5, 0x5) => self.op_FX55(x),
             _ => println!("opcode {:04x} not implemented", opcode),
         }
     }
@@ -462,5 +463,17 @@ impl CPU {
         self.ram[self.i] = self.vx[x as usize] / 100; // Hundreds
         self.ram[self.i + 1] = (self.vx[x as usize] % 100) / 10; // Tens
         self.ram[self.i + 2] = self.vx[x as usize] % 10; // Ones
+
+        self.pc += 2;
+    }
+
+    fn op_FX55(&mut self, x: u8) {
+        println!("FX55 Called");
+
+        for i in 0..x {
+            self.ram[self.i + i as usize] = self.vx[i as usize];
+        }
+
+        self.pc += 2;
     }
 }
