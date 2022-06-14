@@ -181,6 +181,8 @@ impl CPU {
 
         if self.vx[x as usize] == nn {
             self.pc += 4;
+        } else {
+            self.pc += 2;
         }
     }
 
