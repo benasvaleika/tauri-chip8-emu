@@ -113,7 +113,7 @@ impl CPU {
             (0xF, _, 0x2, 0x9) => self.op_FX29(x),
             (0xF, _, 0x3, 0x3) => self.op_FX33(x),
             (0xF, _, 0x5, 0x5) => self.op_FX55(x),
-            // (0xF, _, 0x6, 0x5) => self.op_FX65(x),
+            (0xF, _, 0x6, 0x5) => self.op_FX65(x),
             _ => println!("opcode {:04x} not implemented", opcode),
         }
     }
@@ -474,8 +474,21 @@ impl CPU {
         println!("FX55 Called");
 
         for i in 0..=x {
-            println!("{:?}", i);
             self.ram[self.i + i as usize] = self.vx[i as usize];
+        }
+
+        self.i = self.i + x as usize + 1;
+
+        self.pc += 2;
+    }
+
+    // Fill V0 to VX inclusive with the values stored in memory starting at I.
+    // I is set to I+x+1 after operation
+    fn op_FX65(&mut self, x: u8) {
+        println!("FX65 Called");
+
+        for i in 0..=x {
+            self.vx[i as usize] = self.ram[self.i + i as usize];
         }
 
         self.i = self.i + x as usize + 1;
