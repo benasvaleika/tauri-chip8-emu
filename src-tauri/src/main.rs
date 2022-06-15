@@ -7,7 +7,8 @@
 mod chip8_font;
 mod cpu;
 
-use std::fs;
+use core::time;
+use std::{fs, thread};
 
 use cpu::CPU;
 use tauri::Window;
@@ -19,29 +20,30 @@ struct Payload {
 }
 
 #[tauri::command]
-fn start_cpu(window: Window, rom_path: String) {
+async fn start_cpu(window: Window, rom_path: String) {
     let rom_contents = fs::read(rom_path).expect("Error occured while reading the file");
 
     let mut cpu = CPU::new();
 
     cpu.load_rom(&rom_contents);
 
-    let test_arr = [0; 2048];
-
-    for i in 0..30 {
+    loop {
         cpu.emulate_cycle();
+
+        if cpu.display_changed {
+            window
+                .emit(
+                    "display-update",
+                    Payload {
+                        display: cpu.display,
+                    },
+                )
+                .unwrap();
+            println!("Display emitted");
+        }
+
+        thread::sleep(time::Duration::from_millis(2));
     }
-
-    window
-        .emit(
-            "display-update",
-            Payload {
-                display: cpu.display,
-            },
-        )
-        .unwrap();
-
-    cpu.print_display()
 }
 
 fn main() {

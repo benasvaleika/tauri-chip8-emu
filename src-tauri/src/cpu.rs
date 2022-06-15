@@ -11,7 +11,7 @@ pub struct CPU {
     i: usize,
     sp: usize,
     pub display: [u8; 2048],
-    display_changed: bool,
+    pub display_changed: bool,
     pub keys: [bool; 16],
     delayt: u8,
     soundt: u8,
@@ -46,6 +46,8 @@ impl CPU {
 
         println!("{:0x?}", &opcode);
         println!("{:0x?}", self.pc);
+
+        self.display_changed = false;
 
         self.execute_opcode(opcode);
     }
