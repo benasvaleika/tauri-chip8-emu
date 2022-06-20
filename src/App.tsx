@@ -21,7 +21,7 @@ function App() {
 
     document.addEventListener("keydown", (event) => {
       if (event.key === "d") {
-        emit("key-change", {
+        emit("key-action", {
           keyValue: 11,
         });
         console.log("key press down");
@@ -30,7 +30,7 @@ function App() {
 
     document.addEventListener("keyup", (event) => {
       if (event.key === "d") {
-        emit("key-change", {
+        emit("key-action", {
           keyValue: 16,
         });
         console.log("key press up");

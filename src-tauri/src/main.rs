@@ -8,7 +8,11 @@ mod chip8_font;
 mod cpu;
 
 use core::time;
-use std::{fs, thread};
+use std::{
+    fs,
+    sync::{Arc, RwLock},
+    thread,
+};
 
 use cpu::CPU;
 use serde::Deserialize;
@@ -22,30 +26,38 @@ struct Payload {
 
 #[derive(Debug, Deserialize)]
 struct KeyChange {
-    keyValue: u8,
+    keyValue: usize,
 }
 
 #[tauri::command]
 async fn start_cpu(window: Window, rom_path: String) {
     let mut cpu = CPU::new();
+    let keys = Arc::new(RwLock::new([false; 16]));
+    let c_keys = Arc::clone(&keys);
 
     let rom_contents = fs::read(rom_path).expect("Error occured while reading the file");
 
     cpu.load_rom(&rom_contents);
 
-    window.listen_global("key-change", |event| {
+    window.listen_global("key-action", move |event| {
         let payload: KeyChange =
             serde_json::from_str(event.payload().unwrap()).expect("JSON was not well-formatted");
 
+        let mut keys_w = c_keys.write().unwrap();
+
         if (payload.keyValue >= 0) && (payload.keyValue <= 15) {
-            println!("pressed")
+            println!("pressed");
+            keys_w[payload.keyValue] = true;
         } else {
-            println!("cleaned")
+            println!("cleaned");
+            for i in 0..15 {
+                keys_w[i] = false;
+            }
         }
     });
 
     loop {
-        cpu.emulate_cycle();
+        cpu.emulate_cycle(*keys.read().unwrap());
 
         if cpu.display_changed {
             window
