@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api";
 import { open } from "@tauri-apps/api/dialog";
-import { listen } from "@tauri-apps/api/event";
+import { emit, listen } from "@tauri-apps/api/event";
 import { useEffect, useState } from "react";
 import { MainScr } from "./screens/MainScr";
 import { EmulationScr } from "./screens/EmulationScr";
@@ -18,6 +18,24 @@ function App() {
     }
     invoke("start_cpu", { romPath: file_path });
     setEmulationOngoing(true);
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "d") {
+        emit("key-change", {
+          keyValue: 11,
+        });
+        console.log("key press down");
+      }
+    });
+
+    document.addEventListener("keyup", (event) => {
+      if (event.key === "d") {
+        emit("key-change", {
+          keyValue: 16,
+        });
+        console.log("key press up");
+      }
+    });
   };
 
   useEffect(() => {

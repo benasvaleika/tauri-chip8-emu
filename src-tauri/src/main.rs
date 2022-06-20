@@ -11,7 +11,8 @@ use core::time;
 use std::{fs, thread};
 
 use cpu::CPU;
-use tauri::Window;
+use serde::Deserialize;
+use tauri::{Manager, Window};
 
 #[derive(Clone, serde::Serialize)]
 struct Payload {
@@ -19,13 +20,29 @@ struct Payload {
     display: [u8; 2048],
 }
 
+#[derive(Debug, Deserialize)]
+struct KeyChange {
+    keyValue: u8,
+}
+
 #[tauri::command]
 async fn start_cpu(window: Window, rom_path: String) {
-    let rom_contents = fs::read(rom_path).expect("Error occured while reading the file");
-
     let mut cpu = CPU::new();
 
+    let rom_contents = fs::read(rom_path).expect("Error occured while reading the file");
+
     cpu.load_rom(&rom_contents);
+
+    window.listen_global("key-change", |event| {
+        let payload: KeyChange =
+            serde_json::from_str(event.payload().unwrap()).expect("JSON was not well-formatted");
+
+        if (payload.keyValue >= 0) && (payload.keyValue <= 15) {
+            println!("pressed")
+        } else {
+            println!("cleaned")
+        }
+    });
 
     loop {
         cpu.emulate_cycle();
@@ -39,7 +56,6 @@ async fn start_cpu(window: Window, rom_path: String) {
                     },
                 )
                 .unwrap();
-            println!("Display emitted");
         }
 
         thread::sleep(time::Duration::from_millis(2));
