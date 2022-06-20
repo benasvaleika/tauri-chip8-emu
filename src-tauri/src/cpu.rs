@@ -41,15 +41,23 @@ impl CPU {
         }
     }
 
-    pub fn emulate_cycle(&mut self) {
+    pub fn emulate_cycle(&mut self, keys: [bool; 16]) {
+        self.keys = keys;
+
         let opcode = self.read_opcode();
 
         println!("{:0x?}", &opcode);
-        println!("{:0x?}", self.pc);
+        // println!("{:0x?}", self.pc);
 
         self.display_changed = false;
-
         self.execute_opcode(opcode);
+
+        if self.delayt > 0 {
+            self.delayt -= 1;
+        }
+        if self.soundt > 0 {
+            self.soundt -= 1;
+        }
     }
 
     fn read_opcode(&self) -> u16 {
@@ -138,7 +146,7 @@ impl CPU {
 
     // Clear the screen
     fn op_00E0(&mut self) {
-        println!("00E0 Called");
+        // println!("00E0 Called");
 
         for i in 0..32 {
             for j in 0..64 {
@@ -151,7 +159,7 @@ impl CPU {
 
     // Return from subroutine
     fn op_00EE(&mut self) {
-        println!("00EE Called");
+        // println!("00EE Called");
 
         self.sp -= 1;
         self.pc = self.stack[self.sp] + 2;
@@ -159,14 +167,14 @@ impl CPU {
 
     // Jump to address NNN
     fn op_1NNN(&mut self, nnn: usize) {
-        println!("1NNN Called");
+        // println!("1NNN Called");
 
         self.pc = nnn;
     }
 
     // Execute subroutine starting at address NNN
     fn op_2NNN(&mut self, nnn: usize) {
-        println!("2NNN Called");
+        // println!("2NNN Called");
 
         if self.sp > self.stack.len() {
             panic!("Stack Overflow");
@@ -179,7 +187,7 @@ impl CPU {
 
     // Skip the following instruction if the value of VX equals NN
     fn op_3XNN(&mut self, x: u8, nn: u8) {
-        println!("3XNN Called");
+        // println!("3XNN Called");
 
         if self.vx[x as usize] == nn {
             self.pc += 4;
@@ -190,7 +198,7 @@ impl CPU {
 
     // Skip the following instruction if the value of VX is not equal to NN
     fn op_4XNN(&mut self, x: u8, nn: u8) {
-        println!("4XNN Called");
+        // println!("4XNN Called");
 
         if self.vx[x as usize] != nn {
             self.pc += 4;
@@ -201,7 +209,7 @@ impl CPU {
 
     // Skip the following instruction if the value of VX is equal to the value of VY
     fn op_5XY0(&mut self, x: u8, y: u8) {
-        println!("5XY0 Called");
+        // println!("5XY0 Called");
 
         if self.vx[x as usize] == self.vx[y as usize] {
             self.pc += 4;
@@ -212,7 +220,7 @@ impl CPU {
 
     // Store number NN in VX
     fn op_6XNN(&mut self, x: u8, nn: u8) {
-        println!("6XNN Called");
+        // println!("6XNN Called");
 
         self.vx[x as usize] = nn;
         self.pc += 2;
@@ -221,7 +229,7 @@ impl CPU {
     // Add the value NN to VX
     // Does not affect VF
     fn op_7XNN(&mut self, x: u8, nn: u8) {
-        println!("7XNN Called");
+        // println!("7XNN Called");
 
         let result = self.vx[x as usize] as u16 + nn as u16;
 
@@ -231,7 +239,7 @@ impl CPU {
 
     // Store the value of VY in VX
     fn op_8XY0(&mut self, x: u8, y: u8) {
-        println!("8XY0 Called");
+        // println!("8XY0 Called");
 
         self.vx[x as usize] = self.vx[y as usize];
         self.pc += 2;
@@ -239,7 +247,7 @@ impl CPU {
 
     // Set VX to VX OR VY
     fn op_8XY1(&mut self, x: u8, y: u8) {
-        println!("8XY1 Called");
+        // println!("8XY1 Called");
 
         self.vx[x as usize] |= self.vx[y as usize];
         self.pc += 2;
@@ -247,7 +255,7 @@ impl CPU {
 
     // Set VX to VX AND VY
     fn op_8XY2(&mut self, x: u8, y: u8) {
-        println!("8XY2 Called");
+        // println!("8XY2 Called");
 
         self.vx[x as usize] &= self.vx[y as usize];
         self.pc += 2;
@@ -255,7 +263,7 @@ impl CPU {
 
     // Set VX to VX XOR VY
     fn op_8XY3(&mut self, x: u8, y: u8) {
-        println!("8XY3 Called");
+        // println!("8XY3 Called");
 
         self.vx[x as usize] ^= self.vx[y as usize];
         self.pc += 2;
@@ -264,7 +272,7 @@ impl CPU {
     // Add the value of VY to VX, sets VF to 1 if a carry occurs,
     // sets VF to 00 if a carry does not occur
     fn op_8XY4(&mut self, x: u8, y: u8) {
-        println!("8XY4 Called");
+        // println!("8XY4 Called");
 
         let (val, overflow) = self.vx[x as usize].overflowing_add(self.vx[y as usize]);
 
@@ -282,7 +290,7 @@ impl CPU {
     // Substract the value of VY from VX, set VF to 0 if borrow occurs
     // set VF to 1 if the borrow doesn't occur
     fn op_8XY5(&mut self, x: u8, y: u8) {
-        println!("8XY5 Called");
+        // println!("8XY5 Called");
 
         let (val, borrow) = self.vx[x as usize].overflowing_sub(self.vx[y as usize]);
 
@@ -299,7 +307,7 @@ impl CPU {
 
     // 	Stores the least significant bit of VX in VF and then shifts VX to the right by 1 bit
     fn op_8XY6(&mut self, x: u8) {
-        println!("8XY6 Called");
+        // println!("8XY6 Called");
 
         self.vx[0xF] = self.vx[x as usize] & 1;
         self.vx[x as usize] >>= 1;
@@ -310,7 +318,7 @@ impl CPU {
     // Substract the value of VX from VY, store the value in VX.
     // set VF to 0 if the borrow occurs, to 1 otherwise.
     fn op_8XY7(&mut self, x: u8, y: u8) {
-        println!("8XY7 Called");
+        // println!("8XY7 Called");
 
         let (val, borrow) = self.vx[y as usize].overflowing_sub(self.vx[x as usize]);
 
@@ -327,7 +335,7 @@ impl CPU {
 
     // Stores the least significant bit of VX in VF and then shifts VX to the left by 1 bit
     fn op_8XYE(&mut self, x: u8, y: u8) {
-        println!("8XYE Called");
+        // println!("8XYE Called");
 
         self.vx[0xF] = self.vx[x as usize] >> 7;
         self.vx[x as usize] <<= 1;
@@ -338,7 +346,7 @@ impl CPU {
     // Skip the following instruction if the value of register VX
     // is not equal to the value of register VY.
     fn op_9XY0(&mut self, x: u8, y: u8) {
-        println!("9XY0 Called");
+        // println!("9XY0 Called");
 
         if self.vx[x as usize] != self.vx[y as usize] {
             self.pc += 4;
@@ -349,7 +357,7 @@ impl CPU {
 
     // Store memory address NNN in register I
     fn op_ANNN(&mut self, nnn: usize) {
-        println!("ANNN Called");
+        // println!("ANNN Called");
 
         self.i = nnn;
         self.pc += 2;
@@ -357,13 +365,13 @@ impl CPU {
 
     // Jump to address NNN + V0
     fn op_BNNN(&mut self, nnn: usize) {
-        println!("BNNN Called");
+        // println!("BNNN Called");
         self.pc = nnn + self.vx[0x0] as usize;
     }
 
     // Set VX to a random number with mask of NN
     fn op_CXNN(&mut self, x: u8, nn: u8) {
-        println!("CXNN Called");
+        // println!("CXNN Called");
 
         let mut random: u8 = rand::thread_rng().gen();
         self.vx[x as usize] = random & nn;
@@ -374,7 +382,7 @@ impl CPU {
     // at the address stored in I. Set VF to 01 if any set pixels are changed
     // to unset, and 00 otherwise.
     fn op_DXYN(&mut self, x: u8, y: u8, n: usize) {
-        println!("DXYN Called");
+        // println!("DXYN Called");
 
         self.vx[0xF] = 0;
         self.display_changed = true;
@@ -396,7 +404,7 @@ impl CPU {
     // Skip the following instruction if they key corresponding to the hex
     // value is pressed
     fn op_EX9E(&mut self, x: u8) {
-        println!("EX9E Called");
+        // println!("EX9E Called");
 
         if self.keys[x as usize] {
             self.pc += 4;
@@ -408,7 +416,7 @@ impl CPU {
     // Skip the following instruction if they key corresponding to the hex
     // value is not pressed
     fn op_EXA1(&mut self, x: u8) {
-        println!("EXA1 Called");
+        // println!("EXA1 Called");
 
         if self.keys[x as usize] {
             self.pc += 2;
@@ -419,7 +427,7 @@ impl CPU {
 
     // Store current value of the delay timer in VX
     fn op_FX07(&mut self, x: u8) {
-        println!("FX07 Called");
+        // println!("FX07 Called");
 
         self.vx[x as usize] = self.delayt;
         self.pc += 2;
@@ -427,7 +435,7 @@ impl CPU {
 
     // Wait for keypress and store the result in VX
     fn op_FX0A(&mut self, x: u8) {
-        println!("FX0A Called");
+        // println!("FX0A Called");
 
         for i in 0..self.keys.len() {
             if self.keys[i] == true {
@@ -439,7 +447,7 @@ impl CPU {
 
     // Set the delay timer to the current value of register VX
     fn op_FX15(&mut self, x: u8) {
-        println!("FX15 Called");
+        // println!("FX15 Called");
 
         self.delayt = self.vx[x as usize];
         self.pc += 2;
@@ -447,7 +455,7 @@ impl CPU {
 
     // Set the sound timet to the current value of register VX
     fn op_FX18(&mut self, x: u8) {
-        println!("FX18 Called");
+        // println!("FX18 Called");
 
         self.soundt = self.vx[x as usize];
         self.pc += 2;
@@ -455,7 +463,7 @@ impl CPU {
 
     // Add the value stored in VX to I
     fn op_FX1E(&mut self, x: u8) {
-        println!("FX1E Called");
+        // println!("FX1E Called");
 
         self.i += self.vx[x as usize] as usize;
         self.pc += 2;
@@ -464,7 +472,7 @@ impl CPU {
     // Set I to the memory address of the sprite data corresponding
     // to the hex digit stored in VX
     fn op_FX29(&mut self, x: u8) {
-        println!("FX29 Called");
+        // println!("FX29 Called");
 
         self.i = 0x50 + (x as usize * 5);
         self.pc += 2;
@@ -473,7 +481,7 @@ impl CPU {
     // Store binary-coded decimal representation of the value stored in VX
     // at memory addresses I, I+1, I+2
     fn op_FX33(&mut self, x: u8) {
-        println!("FX33 Called");
+        // println!("FX33 Called");
 
         self.ram[self.i] = self.vx[x as usize] / 100; // Hundreds
         self.ram[self.i + 1] = (self.vx[x as usize] % 100) / 10; // Tens
@@ -485,8 +493,8 @@ impl CPU {
     // Store the values of V0 to VX inclusive in memory starting at address I.
     // I is set to I+x+1 after operation
     fn op_FX55(&mut self, x: u8) {
-        println!("FX55 Called");
-
+        // println!("FX55 Called");
+        //
         for i in 0..=x {
             self.ram[self.i + i as usize] = self.vx[i as usize];
         }
@@ -499,7 +507,7 @@ impl CPU {
     // Fill V0 to VX inclusive with the values stored in memory starting at I.
     // I is set to I+x+1 after operation
     fn op_FX65(&mut self, x: u8) {
-        println!("FX65 Called");
+        // println!("FX65 Called");
 
         for i in 0..=x {
             self.vx[i as usize] = self.ram[self.i + i as usize];
