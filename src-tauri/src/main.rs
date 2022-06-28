@@ -46,11 +46,9 @@ async fn start_cpu(window: Window, rom_path: String) {
         let mut keys_w = c_keys.write().unwrap();
 
         if (payload.keyValue >= 0) && (payload.keyValue <= 15) {
-            println!("pressed");
             keys_w[payload.keyValue] = true;
         } else {
-            println!("cleaned");
-            for i in 0..15 {
+            for i in 0..=15 {
                 keys_w[i] = false;
             }
         }
