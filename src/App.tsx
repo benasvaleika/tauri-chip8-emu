@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { MainScr } from "./screens/MainScr";
 import { EmulationScr } from "./screens/EmulationScr";
 import { Payload } from "./interfaces";
-import { sendKeyActionDown } from "./utils/keys";
+import { sendKeyActionDown, sendKeyActionUp } from "./utils/keys";
 
 function App() {
   const [emulationOngoing, setEmulationOngoing] = useState(false);
@@ -22,12 +22,11 @@ function App() {
 
     document.addEventListener("keydown", (event) => {
       sendKeyActionDown(event);
+      console.log("key down");
     });
 
     document.addEventListener("keyup", (event) => {
-      emit("key-action", {
-        keyValue: 16,
-      });
+      sendKeyActionUp(event);
       console.log("key press up");
     });
   };
