@@ -46,7 +46,7 @@ impl CPU {
 
         let opcode = self.read_opcode();
 
-        println!("{:0x?}", &opcode);
+        // println!("{:0x?}", &opcode);
         // println!("{:0x?}", self.pc);
 
         self.display_changed = false;
@@ -239,7 +239,7 @@ impl CPU {
 
     // Store the value of VY in VX
     fn op_8XY0(&mut self, x: u8, y: u8) {
-        println!("8XY0 Called");
+        println!("8XY0 Called")
 
         self.vx[x as usize] = self.vx[y as usize];
         self.pc += 2;
@@ -409,7 +409,7 @@ impl CPU {
     fn op_EX9E(&mut self, x: u8) {
         println!("EX9E Called");
 
-        if self.keys[x as usize] {
+        if self.keys[self.vx[x as usize] as usize] {
             self.pc += 4;
         } else {
             self.pc += 2;
@@ -421,10 +421,10 @@ impl CPU {
     fn op_EXA1(&mut self, x: u8) {
         println!("EXA1 Called");
 
-        if self.keys[x as usize] {
-            self.pc += 2;
-        } else {
+        if !self.keys[self.vx[x as usize] as usize] {
             self.pc += 4;
+        } else {
+            self.pc += 2;
         }
     }
 
@@ -478,7 +478,7 @@ impl CPU {
     fn op_FX29(&mut self, x: u8) {
         println!("FX29 Called");
 
-        self.i =  0x50 + (self.vx[x as usize] as usize)* 5;
+        self.i =  0x50 + (self.vx[x as usize] as usize) * 5;
         self.pc += 2;
     }
 
@@ -499,11 +499,9 @@ impl CPU {
     fn op_FX55(&mut self, x: u8) {
         println!("FX55 Called");
         
-        for i in 0..=x {
+        for i in 0..x + 1 {
             self.ram[self.i + i as usize] = self.vx[i as usize];
         }
-
-        self.i = self.i + x as usize + 1;
 
         self.pc += 2;
     }
@@ -513,11 +511,9 @@ impl CPU {
     fn op_FX65(&mut self, x: u8) {
         println!("FX65 Called");
 
-        for i in 0..=x {
+        for i in 0..x + 1 {
             self.vx[i as usize] = self.ram[self.i + i as usize];
         }
-
-        self.i = self.i + x as usize + 1;
 
         self.pc += 2;
     }
