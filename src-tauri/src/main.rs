@@ -33,25 +33,29 @@ struct KeyChange {
 async fn start_cpu(window: Window, rom_path: String) {
     let mut cpu = CPU::new();
     let keys = Arc::new(RwLock::new([false; 16]));
-    let c_keys = Arc::clone(&keys);
+    let a_keys = Arc::clone(&keys);
+    let b_keys = Arc::clone(&keys);
 
     let rom_contents = fs::read(rom_path).expect("Error occured while reading the file");
 
     cpu.load_rom(&rom_contents);
 
-    window.listen_global("key-action", move |event| {
+    window.listen_global("key-action-down", move |event| {
         let payload: KeyChange =
             serde_json::from_str(event.payload().unwrap()).expect("JSON was not well-formatted");
 
-        let mut keys_w = c_keys.write().unwrap();
+        let mut keys_w = a_keys.write().unwrap();
 
-        if (payload.keyValue >= 0) && (payload.keyValue <= 15) {
-            keys_w[payload.keyValue] = true;
-        } else {
-            for i in 0..=15 {
-                keys_w[i] = false;
-            }
-        }
+        keys_w[payload.keyValue] = true;
+    });
+
+    window.listen_global("key-action-up", move |event| {
+        let payload: KeyChange =
+            serde_json::from_str(event.payload().unwrap()).expect("JSON was not well-formatted");
+
+        let mut keys_w = b_keys.write().unwrap();
+
+        keys_w[payload.keyValue] = false;
     });
 
     loop {
