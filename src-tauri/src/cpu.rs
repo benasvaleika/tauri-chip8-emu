@@ -1,6 +1,9 @@
 use crate::chip8_font::CHIP8_FONT_SET;
 use rand::Rng;
 
+static load_quirk: bool = true;
+static shift_quirk: bool = true;
+
 pub struct CPU {
     // pub for debuging
     pub ram: [u8; 4096],
@@ -105,7 +108,7 @@ impl CPU {
             (0x8, _, _, 0x3) => self.op_8XY3(x, y),
             (0x8, _, _, 0x4) => self.op_8XY4(x, y),
             (0x8, _, _, 0x5) => self.op_8XY5(x, y),
-            (0x8, _, _, 0x6) => self.op_8XY6(x),
+            (0x8, _, _, 0x6) => self.op_8XY6(x, y),
             (0x8, _, _, 0x7) => self.op_8XY7(x, y),
             (0x8, _, _, 0xE) => self.op_8XYE(x, y),
             (0x9, _, _, 0x0) => self.op_9XY0(x, y),
@@ -231,15 +234,14 @@ impl CPU {
     fn op_7XNN(&mut self, x: u8, nn: u8) {
         println!("7XNN Called");
 
-        let result = self.vx[x as usize] as u16 + nn as u16;
+        self.vx[x as usize] = self.vx[x as usize].wrapping_add(nn);
 
-        self.vx[x as usize] = result as u8;
         self.pc += 2;
     }
 
     // Store the value of VY in VX
     fn op_8XY0(&mut self, x: u8, y: u8) {
-        println!("8XY0 Called")
+        println!("8XY0 Called");
 
         self.vx[x as usize] = self.vx[y as usize];
         self.pc += 2;
@@ -306,11 +308,15 @@ impl CPU {
     }
 
     // 	Stores the least significant bit of VX in VF and then shifts VX to the right by 1 bit
-    fn op_8XY6(&mut self, x: u8) {
+    fn op_8XY6(&mut self, x: u8, mut y: u8) {
         println!("8XY6 Called");
 
-        self.vx[0xF] = self.vx[x as usize] & 1;
-        self.vx[x as usize] >>= 1;
+        if shift_quirk {
+            y = x;
+        }
+
+        self.vx[0xF] = self.vx[y as usize] & 0x01;
+        self.vx[x as usize] = self.vx[y as usize] >> 1;
 
         self.pc += 2;
     }
@@ -334,12 +340,15 @@ impl CPU {
     }
 
     // Stores the least significant bit of VX in VF and then shifts VX to the left by 1 bit
-    fn op_8XYE(&mut self, x: u8, y: u8) {
+    fn op_8XYE(&mut self, x: u8,mut y: u8) {
         println!("8XYE Called");
 
-        let msb = (self.vx[x as usize] >> 7) & 1;
-                self.vx[x as usize] <<= 1;
-                self.vx[0xF] = msb;
+        if shift_quirk {
+            y = x
+        }
+
+        self.vx[0xF] = (self.vx[y as usize] >> 7) & 0x01;
+        self.vx[x as usize] = self.vx[y as usize] << 1;
 
         self.pc += 2;
     }
@@ -503,6 +512,10 @@ impl CPU {
             self.ram[self.i + i as usize] = self.vx[i as usize];
         }
 
+        if load_quirk {
+            self.i += x as usize + 1
+        }
+
         self.pc += 2;
     }
 
@@ -513,6 +526,10 @@ impl CPU {
 
         for i in 0..x + 1 {
             self.vx[i as usize] = self.ram[self.i + i as usize];
+        }
+
+        if load_quirk {
+            self.i += x as usize + 1
         }
 
         self.pc += 2;
